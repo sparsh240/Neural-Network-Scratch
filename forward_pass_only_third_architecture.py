@@ -3,7 +3,9 @@ import random
 
 # Fix thought process
 # instead of treating input layer as a group of neurons , we treat it as a list of inputs that go into each neuron
-# defining front prop(as of now without non linear function) and back prop (in the process) 
+# non linearities handled in Layer class
+# Input length validation with respect to weights added
+
 
 
 
@@ -11,6 +13,11 @@ import random
 Problems - 
    1) The structure is valid but only in the context of forward propogation
    2) there is no learning/training or backpropogation possible with the current structure in itself
+   3) Range of the randomly initialized variables (weights and biases) may not be efficient
+   4) Activation function choice handling might be needed to be looked at
+   5) Error handling need to be looked at and input validation still incomplete , it
+   - only validates input length
+
 '''
 class Neuron:
     def __init__(self , num_inputs: int):
@@ -21,14 +28,15 @@ class Neuron:
             self.weights.append(random.random())
     
 
-    def forward_prop_neuron(self,inputs : list):
+    def forward_prop_neuron(self, inputs : list):
         output = 0
-        for i in range(len(inputs)):
-            output += inputs[i]*self.weights[i]
-        
-        output +=self.bias
+        if (len(inputs) ==len(self.weights)):
+            for i in range(len(inputs)):
+                output += inputs[i]*self.weights[i]
+            
+            output +=self.bias
 
-        return output
+            return output
     
     
 # class layer - takes the number of neurons in current layers and number of neurons in previous layer in constructor 
@@ -66,17 +74,24 @@ class Layer:
         return non_linear_outputs
     
     def non_linear_relu(self , inputs : list):
+        nl_outputs = []
         for i in range(len(inputs)):
+            # using seperate list for outputs
             if inputs[i] <= 0:
-                inputs[i] = 0
+                nl_outputs.append(0)
+            else:
+                nl_outputs.append(inputs[i])
         
-        return inputs
+        return nl_outputs
     
     def non_linear_sigmoid(self , inputs : list):
+        nl_outputs = []
         for i in range(len(inputs)):
-            inputs[i] = 1/(1+2.71828**(-inputs[i]))
+
+            # using seperate list for outputs
+            nl_outputs.append(1/(1+2.71828**(-inputs[i])))
         
-        return inputs
+        return nl_outputs
 
         
 
