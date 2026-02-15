@@ -8,4 +8,4 @@ The codebase is organized chronologically to reflect the learning curve. It cont
 
 ## Objective
 The primary goal of this project is discovery through implementation.
-Rather than immediately adopting industry-standard boilerplate, I aim to derive these standards through experimentation. By starting with naive implementations and identifying their bottlenecks, I gain a deeper appreciation for why modern professional architectures are structured the way they are.
+Rather than immediately adopting industry-standard boilerplate, I aim to derive these standards through experimentation. By starting with naive implementations with fundamental logic and identifying their bottlenecks, I gain a deeper appreciation for why modern professional architectures are structured the way they are.
