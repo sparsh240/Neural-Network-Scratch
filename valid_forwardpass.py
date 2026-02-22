@@ -10,10 +10,6 @@ MAX_INIT =  0.4
 Still not ready for backprop or training
 Basic network structure , not resembling modern neural networks Yet
 relatively Slow
-MAJOR ISSUES - 
-Giving ownership of weights to neurons causes problems with storage in forward or backward pass
-It is not feasible for one of forward or backward pass to take place without consuming too much time or storage 
-overall very hectic to let a neuron or layer control specific weights
 '''
 class Neuron:
 
@@ -137,6 +133,7 @@ class Network:
         for i in range(len(self.layers)):
             # Forward pass 
             outputs = self.layers[i].forward(outputs)
+            # Temporary transition from output of current layer to input of next layer
         
         return outputs
     
