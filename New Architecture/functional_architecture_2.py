@@ -1,46 +1,61 @@
 import numpy as np
 
+
+# Created a network architecture capable of learning , backprop implemented for sigmoid and relu 
+# forward and backward pass enabled , minimal working network architecture from scratch
+
+'''problems:
+   Biases and Batches not compatible
+   Initialization of weights NOT optimal
+   hardcoded components that should rather be dynamic
+   softmax incapable of learning AND no cross enropy loss implemented here
+
+'''
+
+
 MIN_VAL = 0
 MAX_VAL = 1
 
 
-# not implementing batches yet 
-# Backpropogation Can be implemented with lesser complexity
-'Matrix implementation of weights added for faster calculations , ready for forward propogation without batches'
-
-'problem:'
-'fatal missing components for backprop , no bias terms or support for batches'
-
-
-
 class LinearOutput:
     def __init__(self , num_inputs : int, num_outputs : int , activation : str):
-        # Weight matrix
+
         self.weight_matrix = np.random.uniform(MIN_VAL , MAX_VAL , size=(num_inputs,num_outputs))
         self.non_linear = NonLinear(activation)
 
     
     def input_check(self , inputs : np.typing.NDArray):
-        # Here we check number of rows in a matrix (number of neurons) to number of columns in the 1D input array , which is the number of inputs , that is the number of weights for the prev layer
+        
         if self.weight_matrix.shape[0] != inputs.shape[1]:
             raise Exception("Invalid size")
 
     def forward(self, inputs : np.typing.NDArray):
         self.input_check(inputs)
-        
-        # saved inputs , final non linear output
+              
         self.inputs = inputs
         linear_outputs = np.dot(self.inputs , self.weight_matrix)
         self.non_linear_outputs = self.non_linear.forward(linear_outputs)
 
         return self.non_linear_outputs
     
-    def backprop(self , incoming_linear_loss : np.typing.NDArray):
-        pass # we will compute non linear loss and convert it to Lonear loss with NonLinear object
-        
-        # self.weight_matrix -= losses_matrix  -> matrix that holds losses for all weights in the blackbox
-        # return outgoing_linear_loss
+    def backprop(self , non_linear_gradients : np.typing.NDArray , learning_rate):
 
+        # Chnaging weights
+        linear_gradients = self.non_linear.backprop(non_linear_gradients)
+
+        # transpose of inputs needed for backprop
+        weight_changes = np.dot(self.inputs.T,linear_gradients) # dL/da*da/dz*inputs - inputs = dz/dw
+        # Modifying weights -> learning 
+        self.weight_matrix -= weight_changes*learning_rate
+
+        # Calculating non linear gradient for previous layer , transpose for backprop
+        prev_layer_grads =  np.dot(linear_gradients,self.weight_matrix.T)
+        # returning the non linear grads for backprop for previous layer
+        return prev_layer_grads 
+
+
+
+    
 
 
 class NonLinear:
@@ -53,16 +68,18 @@ class NonLinear:
         if self.activation.lower() not in activations:
             raise Exception("Invalid Activation Function")
         
-        # saved the inputs to non linear component for dL/dw = dL/da*da/dz*inputs 
+        # inputs to non linear layer saved
         self.linear_outputs = linear_outputs
 
-        outputs = None
+        # inputs to non linear layers used in derivative calculations
+        non_linear_outputs = None
         match self.activation.lower():
             case 'sigmoid':
-                outputs = 1 / (1 + (np.exp(-linear_outputs)))
+                non_linear_outputs = 1 / (1 + (np.exp(-linear_outputs)))
+                self.sigmoid_outs = non_linear_outputs
             
             case 'relu':
-                outputs = np.maximum(0, linear_outputs)
+                non_linear_outputs = np.maximum(0, linear_outputs)
                 
             case 'softmax':
 
@@ -70,13 +87,25 @@ class NonLinear:
                 exp_values = np.exp(shifted_outputs)
 
                 summation = np.sum(exp_values)
-                outputs = exp_values / summation
+                non_linear_outputs = exp_values / summation
             
-        return outputs
+        return non_linear_outputs 
 
-    def backprop(self , non_linear_loss , loss = None):
-        pass
-        # return linear_loss
+    def backprop(self , non_linear_gradients , loss = None): #dL/da
+
+        linear_transformation = 0
+        match self.activation.lower():
+            case 'sigmoid':
+                linear_transformation = self.sigmoid_outs * (1 - self.sigmoid_outs) # da/dz
+            case 'relu':
+                linear_transformation = (self.linear_outputs > 0 ).astype(float) # da/dz
+            case 'softmax':
+                pass # for now , gradient unclear
+
+        return non_linear_gradients*linear_transformation  # dL/da*da/dz
+        
+        
+        
 
 
 class Network:
@@ -88,10 +117,7 @@ class Network:
         self.temp_layers.append(LinearOutput(num_inputs , num_outputs , activation))
     
     def layer_connectivity_validation(self):
-        """
-        Validates that the output dimension of each layer matches 
-        the input dimension of the subsequent layer.
-        """
+
         if not self.temp_layers:
             raise Exception("Empty Network")
 
@@ -123,8 +149,12 @@ class Network:
         match self.loss_fn.lower():
             case 'bceloss':
                 epsilon = 1e-7
+               
                 predicted_outputs = np.clip(predicted_outputs, epsilon, 1 - epsilon)
+                
                 loss = -np.mean(true_outputs*np.log(predicted_outputs) + (1-true_outputs)*np.log(1-predicted_outputs))
+                
+                
                 N = predicted_outputs.size
                 loss_gradient = ((predicted_outputs - true_outputs) / (predicted_outputs*(1 - predicted_outputs))) / N             
             
@@ -150,17 +180,27 @@ class Network:
         for layer in self.layers:
             predicted_outputs = layer.forward(predicted_outputs)
 
+        # calculating for final model loss that is to be backpropogated
         loss , loss_gradients = self.loss_calc(true_outputs , predicted_outputs )
         
         return predicted_outputs , loss , loss_gradients
     
-    def backward(self):
-        pass
+
+    
+    def backward(self , loss_gradients , learning_rate):
+        # initializing the backprop 
+        # these loss gradients are non linear , that are first filtered to be linear for current layer and  
+        # then later used  to calculate non linear errors for previous layer 
+        for layer in reversed(self.layers):
+            loss_gradients = layer.backprop(loss_gradients,learning_rate)
+
 
         
 
 
-
         
 
+       
         
+
+
