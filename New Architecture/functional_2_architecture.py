@@ -5,10 +5,13 @@ import numpy as np
 # forward and backward pass enabled , minimal working network architecture from scratch
 
 '''problems:
+
    Biases and Batches not compatible
    Initialization of weights NOT optimal
    hardcoded components that should rather be dynamic
    softmax incapable of learning AND no cross enropy loss implemented here
+
+   Non Linear and Linear can both be Integrated into one class , we kept it sepeate Till now for Readability and modularity.
 
 '''
 
