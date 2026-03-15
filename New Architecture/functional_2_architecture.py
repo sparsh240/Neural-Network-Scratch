@@ -15,6 +15,8 @@ import numpy as np
 
 '''
 
+'Problem - the following structure modified weights first and then calculated grads for previous layer (critical problem as we will be trying to find the losses of previous layer , with the weights it never interacted with)'
+
 
 MIN_VAL = 0
 MAX_VAL = 1
@@ -52,7 +54,8 @@ class LinearOutput:
         self.weight_matrix -= weight_changes*learning_rate
 
         # Calculating non linear gradient for previous layer , transpose for backprop
-        prev_layer_grads =  np.dot(linear_gradients,self.weight_matrix.T)
+        prev_layer_grads =  np.dot(linear_gradients,self.weight_matrix.T) 
+        
         # returning the non linear grads for backprop for previous layer
         return prev_layer_grads 
 
@@ -79,11 +82,9 @@ class NonLinear:
         match self.activation.lower():
             case 'sigmoid':
                 non_linear_outputs = 1 / (1 + (np.exp(-linear_outputs)))
-<<<<<<< HEAD
+                # For non linear backprop simplicity , we save this
                 self.sigmoid_outs = non_linear_outputs
-=======
                 
->>>>>>> master
             
             case 'relu':
                 non_linear_outputs = np.maximum(0, linear_outputs)

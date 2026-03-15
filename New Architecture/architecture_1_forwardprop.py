@@ -19,7 +19,7 @@ class LinearOutput:
         self.weight_matrix = np.random.uniform(MIN_VAL , MAX_VAL , size=(num_inputs,num_outputs))
         self.non_linear = NonLinear(activation)
 
-    
+
     def input_check(self , inputs : np.typing.NDArray):
         # Here we check number of rows in a matrix (number of neurons) to number of columns in the 1D input array , which is the number of inputs , that is the number of weights for the prev layer
         if self.weight_matrix.shape[0] != inputs.shape[1]:
