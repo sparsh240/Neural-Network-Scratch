@@ -79,7 +79,11 @@ class NonLinear:
         match self.activation.lower():
             case 'sigmoid':
                 non_linear_outputs = 1 / (1 + (np.exp(-linear_outputs)))
+<<<<<<< HEAD
                 self.sigmoid_outs = non_linear_outputs
+=======
+                
+>>>>>>> master
             
             case 'relu':
                 non_linear_outputs = np.maximum(0, linear_outputs)

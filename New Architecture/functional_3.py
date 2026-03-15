@@ -17,6 +17,9 @@ class Layer:
 
         if self.activation_fn.lower() not in Layer.valid_activations:
             raise Exception("Not a Valid Activation Function")
+        if self.inputs.shape[0] != self.weights.shape[0]:
+            raise Exception("Data Shape Not same as expected Input shape")
+        
         
     def initialization(self, in_size , out_size): # initializing weight and biases 
         # Conditionally define weight matrix based on input-output sizes and weight matrix
@@ -24,15 +27,47 @@ class Layer:
         self.weights = 0
         self.bias = 0
     
-    def forward(self, inputs):
+    def forward(self, inputs:np.typing.NDArray):
+        self.inputs = inputs
         self.validation()
         # Performs forward pass through layer
-        self.inputs = inputs
-        linear_outs = np.dot(self.inputs, self.weights) + self.bias
-        self.forward_outs = self.activation(linear = linear_outs)
-        return 
+        linear_outs = np.dot(self.inputs, self.weights) + self.bias # Linear pass 
+        self.forward_outs = self.activation(linear = linear_outs) # Activation
+        return self.forward_outs # Forwarded to next layer as inputs
     
     def activation(self , linear):
-        # Conditionally define activation for forward prop
-        pass 
+
+        Activated_Outputs = None
+        match self.activation_fn.lower():
+            
+            case 'sigmoid':
+                Activated_Outputs = 1 / (1 + (np.exp(-linear))) 
+
+            case 'relu':
+                Activated_Outputs = np.maximum(0,linear)
+
+            case 'softmax':
+                # For NOT Computationally destroying anything
+                shift = linear - max(linear) 
+                exponents = np.exp(shift)
+                summation = np.sum(exponents)
+                Activated_Outputs = exponents/summation
+            
+            case None:
+                Activated_Outputs = linear
+
+        if Activated_Outputs == None:
+            raise Exception("Activation Failed")
+
+        return Activated_Outputs
+    
+    # Forward pass Done for the layer
+
+    def backprop(self,non_linear_loss):
+        pass
+
+    def linearization(self,non_linear_loss):
+        pass
+    
+    
 
