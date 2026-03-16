@@ -3,18 +3,17 @@ import numpy as np
 # Integrating Linear and Non linear functionalities into a single class 
 # Adding a loss class for modularity and structure 
 # we will keep the optimizer vanilla gradient discent for now
-
-'No support for batches yet'
 'Hardcoded components reduced'
 'training with both weights and biases added'
 
 
+'No batches supported'
 class Transformation: 
     # NOT exactly a layer with respect to the traditional definition of a layer in neural networks , but more of the Area Between 2 Layers 
     # (inputs to previous layer) Inputs -> Processing (Mathematics) -> Outputs (inputs to next layer) 
 
     # Defining valid Activations across all instances via shared variable
-    valid_activations = ('relu' , 'sigmoid' , 'softmax' , None)
+    valid_activations = ('relu' , 'sigmoid' , 'softmax' , 'none')
 
     def __init__(self, input_dim, output_dim , activation = None ):
         self.activation_fn = activation
@@ -22,18 +21,32 @@ class Transformation:
 
     def validation(self):
 
-        if self.activation_fn.lower() not in Transformation.valid_activations:
+        if str(self.activation_fn).lower() not in Transformation.valid_activations:
             raise Exception("Not a Valid Activation Function")
         if self.inputs.shape[0] != self.weights.shape[0]:
             raise Exception("Data Shape Not same as expected Input shape")
         
-        
+    # Uniform
     def initialization(self, in_size , out_size): # initializing weight and biases 
         # Conditionally define weight matrix based on input-output sizes and weight matrix
-        # self.activation_fn (working with this ) 
         self.weights = 0
         self.bias = 0
-    
+        match str(self.activation_fn).lower():
+            case 'sigmoid': # xavier initialization 
+                self.weights = np.random.uniform(-np.sqrt(6/(in_size+out_size)),np.sqrt(6/(in_size+out_size)) , size=(in_size,out_size))
+                self.bias = np.zeros(out_size)
+            case 'relu': # He initialization
+                self.weights = np.random.uniform(-np.sqrt(6/(in_size)),np.sqrt(6/(in_size)) , size=(in_size,out_size))
+                self.bias = np.full(out_size,0.01) # to prevent neurons from being dead at the start of the training  
+            case 'softmax': # xavier (usually suggested)
+                self.weights = np.random.uniform(-np.sqrt(6/(in_size+out_size)),np.sqrt(6/(in_size+out_size)) , size=(in_size,out_size))
+                self.bias = np.zeros(out_size)
+
+            case 'none':
+                self.weights = np.random.uniform(-1 , 1, size=(in_size,out_size))
+                self.bias = np.zeros(out_size)
+
+
     def forward(self, inputs:np.typing.NDArray):
         self.inputs = inputs
         self.validation()
@@ -45,7 +58,7 @@ class Transformation:
     def activation(self , linear):
 
         Activated_Outputs = None
-        match self.activation_fn.lower():
+        match str(self.activation_fn).lower():
             
             case 'sigmoid':
                 Activated_Outputs = 1 / (1 + (np.exp(-linear))) 
@@ -56,15 +69,15 @@ class Transformation:
 
             case 'softmax':
                 # For NOT Computationally destroying anything
-                shift = linear - max(linear) 
+                shift = linear - np.max(linear) 
                 exponents = np.exp(shift)
                 summation = np.sum(exponents)
                 Activated_Outputs = exponents/summation
             
-            case None:
+            case 'none':
                 Activated_Outputs = linear
 
-        if Activated_Outputs == None:
+        if Activated_Outputs is None:
             raise Exception("Activation Failed")
 
         return Activated_Outputs
@@ -81,8 +94,8 @@ class Transformation:
         # Training / Modifying parameters
         # linearize losses = dL/db , linearized losses * inputs = dL/dw
         # we know that dz/dw = inputs , hence we saved self.inputs
-        change_in_weights = np.dot(self.inputs.T,linearized_losses) *learning_rate 
-        change_in_bias = np.sum(linearized_losses) * learning_rate
+        change_in_weights = np.outer(self.inputs,linearized_losses) *learning_rate 
+        change_in_bias = linearized_losses * learning_rate # axis = 0 is important
         self.weights -= change_in_weights 
         self.bias -= change_in_bias
 
@@ -93,7 +106,7 @@ class Transformation:
 
         linearized_losses = None # da/dz 
         # since we integrated CEloss with softmax , linearization is already done in case of softmax + Cross Entropy Loss
-        match self.activation_fn.lower():
+        match str(self.activation_fn).lower():
 
             case 'sigmoid':
                 # for simplicity , we just save sigmoid outputs
@@ -101,8 +114,8 @@ class Transformation:
             case 'relu':
                 # we saved linear outputs of the layer for this
                 linearized_losses = (self.forward_outs > 0 ).astype(float)
-            case None | 'softmax': # assuming that softmax is only used with CELoss here
-                linearized_losses = non_linearized_losses
+            case 'none' | 'softmax': # assuming that softmax is only used with CELoss here
+                linearized_losses = 1 # since we return non linearized losses * linearized losses , 1 keeps it as is.
 
         # To modify bias , dL/db = dL/da*da/dz*dz/db
         # since z = i*w + b , dz/db = 1  hence sum of linearized losses = dz/db (changes in bias)
@@ -182,21 +195,25 @@ class Loss:
         
 
 class Network:
-    def __init__(self):
+    def __init__(self,loss_fn):
         self.temp_layers = []
-        "self.mode = 'train'" # look forward into this
+        self.mode = 'train'
+        self.loss_fn = loss_fn
+        self.validation_check = 0
 
     def Layer(self , num_inputs , num_outputs , activation = None):
         self.temp_layers.append(Transformation(num_inputs,num_outputs,activation))
 
     def network_validation(self):
         for i in range(len(self.temp_layers)-1):
-            if self.temp_layers[i].weights[1] != self.temp_layers[i+1].weights[0]:
+            if self.temp_layers[i].weights.shape[1] != self.temp_layers[i+1].weights.shape[0]:
                 raise Exception(f"Shape Mismatch between Layer {i} and Layer {i+1}: ")
     
     def forward(self,network_inputs):
-
-        self.network_validation() # to check the mapping of previous outpus to next inputs
+        # to make sure not running valiadation on each iteration
+        if self.validation_check == 0:
+            self.network_validation() # to check the mapping of previous outpus to next inputs
+            self.validation_check = 1
         self.layers = np.array(self.temp_layers)
 
         # Forward pass
@@ -207,34 +224,24 @@ class Network:
         
         return data
     
-    def backward(self , loss_fn):
-        match loss_fn.lower():
-            case 'celoss': 
-                pass
+    def backward(self ,true_outputs,model_outputs,learning_rate):
+        loss = Loss(true_outputs ,self.mode) # mode can be modified externally
+        match self.loss_fn.lower():
+           
+            case 'celoss':  # initial losses
+                initial = loss.CrossEntropyLoss(model_outputs)
             case 'bceloss':
-                pass
+                initial = loss.BCELoss(model_outputs)
             case 'mseloss':
-                pass
+                initial = loss.MSELoss(model_outputs)
             case _:
-                pass
+                raise Exception("Invalid Loss Function")
         
-        'cost , losses = loss[0] , loss[1]' # look forward into this 
+        cost , losses = initial[0] , initial[1] 
 
-        
+        # Backpropogating to all layers
+        for layer in reversed(self.layers):
+            losses = layer.backprop(losses , learning_rate) # losses of prev layer calculated with current layer's losses
 
-
-
-
-
-        
-
-
-
-
-
-
-
-
-
-    
-
+        return cost
+         

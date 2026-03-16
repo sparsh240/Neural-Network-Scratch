@@ -203,12 +203,3 @@ class Network:
             loss_gradients = layer.backprop(loss_gradients,learning_rate)
 
 
-        
-
-
-        
-
-       
-        
-
-
