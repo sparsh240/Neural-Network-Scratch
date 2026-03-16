@@ -244,4 +244,5 @@ class Network:
             losses = layer.backprop(losses , learning_rate) # losses of prev layer calculated with current layer's losses
 
         return cost
+    
          
