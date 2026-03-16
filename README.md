@@ -1,26 +1,68 @@
-
-# Neural Networks: From First Principles
+# Neural Networks: From Scratch
 
 ## Overview
-This repository documents the process of building neural networks from scratch, focusing on fundamental principles rather than relying on high-level libraries. It serves as a technical log of iterative development, highlighting both conceptual and computational challenges encountered.
+This repository documents an experimental approach of building neural networks from first principles. Instead of relying on high-level machine learning frameworks, the project focuses on implementing the underlying mechanics manually in order to understand how neural networks function internally.
 
-## Motivation for Architectural Evolution
+The repository acts as both:
+* A technical learning log
+* A progressive implementation archive
 
-### Old Architecture
-The initial implementations prioritized logical correctness and intuitive structure. However, several limitations became apparent:
-- **Lack of Backpropagation Compatibility:** Early designs were not structured to support backpropagation, making training infeasible.
-- **Absence of Network Abstraction:** Without a dedicated network class, managing and scaling architectures was cumbersome.
-- **Performance Bottlenecks:** The use of basic Python lists and manual loops resulted in slow computations and inefficient memory usage.
+It shows how simple, intuitive ideas gradually evolve into more structured and computationally efficient systems.
 
-### Need for New Architecture
-To address these issues, the project transitioned to a new architecture:
-- **Matrix-Based Computation:** Leveraging libraries like NumPy enabled faster and more efficient mathematical operations.
-- **Improved Scalability:** Introducing a network class and modular design allowed for easier expansion and experimentation.
-- **Preparation for Training:** The new structure is designed to be compatible with backpropagation and future training routines.
+---
 
+## Motivation
+Modern deep learning frameworks abstract away much of the underlying computation. While convenient, this abstraction can obscure how neural networks actually operate.
+
+The objective of this project is to:
+* Understand neural network mechanics at a fundamental level.
+* Implement core concepts manually.
+* Observe how architectural and computational decisions affect performance and scalability.
+
+The approach intentionally begins with naive implementations and progressively improves them.
+
+---
+
+## Architectural Evolution
+
+### Initial Architecture
+The earliest implementations focused primarily on conceptual correctness and intuitive structure.
+
+**Characteristics:**
+* List-based computations using basic Python structures.
+* Manual loops for neuron and layer calculations.
+* Minimal abstraction.
+
+Although logically valid, several issues emerged:
+* **Backpropagation incompatibility:** The original structure was not designed with gradient propagation in mind.
+* **Lack of network abstraction:** Without a dedicated network structure, scaling to deeper architectures became difficult.
+* **Performance limitations:** Python lists and nested loops resulted in slow computations and poor memory efficiency.
+
+These limitations motivated a structural redesign.
+
+### Revised Architecture
+The new architecture introduces improvements aimed at scalability, efficiency, and training compatibility.
+
+**Key changes include:**
+* **Matrix-Based Computation:** Linear algebra operations are implemented using NumPy, allowing faster vectorized computations and cleaner mathematical representation.
+* **Modular Network Design:** A dedicated `Network` abstraction manages layers, parameters, and forward propagation, enabling easier experimentation with architectures.
+* **Training Compatibility:** The structure now aligns with the requirements of backpropagation, preparing the system for gradient-based learning algorithms.
+
+---
+
+The repository will continue to evolve as both a learning tool and a practical implementation reference.
+
+---
 ## Repository Structure
-- **Old Architecture/**: Contains early prototypes and logically valid structures, illustrating the learning process and highlighting computational bottlenecks.
-- **New Architecture/**: Features optimized, scalable, and training-ready implementations.
 
-## Objective
-The primary goal is to discover and understand neural network design through hands-on implementation. By starting with naive approaches and iteratively refining them, this project aims to reveal the rationale behind industry-standard practices.
+```text
+Neural-Networks-From-First-Principles/
+├── Old Architecture/
+│   Early experimental implementations.
+│   These versions demonstrate conceptual exploration
+│   and highlight computational limitations.
+├── New Architecture/
+│   Refactored implementations using matrix operations
+│   and modular design, intended to support training
+│   and scalable experimentation.
+
